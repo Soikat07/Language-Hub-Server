@@ -35,7 +35,20 @@ async function run() {
         return;
       }
     });
-    
+
+    const classesCollection = client.db("summerCamp").collection("classes");
+
+    // get all data from classes from database collection
+    app.get('/classes', async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result);
+    })
+    // get the popular classes from database collection
+    app.get('/popularclasses', async (req, res) => {
+      const query = { enrolled_students: { $gte: 10 } };
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    })
 
 
     // Send a ping to confirm a successful connection
