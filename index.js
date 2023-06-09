@@ -38,9 +38,8 @@ async function run() {
     });
 
     const classesCollection = client.db('summerCamp').collection('classes');
-    const selectClassesCollection = client
-      .db('summerCamp')
-      .collection('selectClasses');
+    const selectClassesCollection = client.db('summerCamp').collection('selectClasses');
+    const usersCollection=client.db('summerCamp').collection('users')
 
     // get all data from classes from database collection
     app.get('/classes', async (req, res) => {
@@ -54,6 +53,13 @@ async function run() {
       const result = await classesCollection.find(query).toArray();
       res.send(result);
     });
+
+    // user collection
+    app.post('/users', async (req, res) => {
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    })
 
     // select classes collection
     app.get('/selectClass', async (req, res) => {
