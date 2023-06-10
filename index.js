@@ -59,7 +59,9 @@ async function run() {
     });
 
     const classesCollection = client.db('summerCamp').collection('classes');
-    const selectClassesCollection = client.db('summerCamp').collection('selectClasses');
+    const selectClassesCollection = client
+      .db('summerCamp')
+      .collection('selectClasses');
     const usersCollection = client.db('summerCamp').collection('users');
 
     app.post('/jwt', (req, res) => {
@@ -96,12 +98,11 @@ async function run() {
       res.send(result);
     });
 
-
     // user collection
-    app.get('/users',verifyJWT,verifyAdmin, async (req, res) => {
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
-    })
+    });
     // verify admin
     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -121,37 +122,52 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          role:'Admin'
-        }
-      }
+          role: 'Admin',
+        },
+      };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
-    })
+    });
+
+    // verify instructor
+    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ instructor: false });
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { instructor: user?.role === 'Instructor' };
+      res.send(result);
+    });
+
     app.patch('/users/instructor/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          role:'Instructor'
-        }
-      }
+          role: 'Instructor',
+        },
+      };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
-    })
+    });
+    
     app.post('/users', async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
       if (existingUser) {
-        return res.send({message:'user already exist'})
+        return res.send({ message: 'user already exist' });
       }
       const result = await usersCollection.insertOne(user);
       res.send(result);
-    })
-
+    });
 
     // select classes collection
-    app.get('/selectClass',verifyJWT, async (req, res) => {
+    app.get('/selectClass', verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
@@ -162,7 +178,7 @@ async function run() {
           .status(403)
           .send({ error: true, message: 'forbidden access' });
       }
-      
+
       const query = { email: email };
       const result = await selectClassesCollection.find(query).toArray();
       res.send(result);
@@ -181,7 +197,6 @@ async function run() {
       res.send(result);
     });
 
-
     // create payment intent
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
@@ -196,7 +211,6 @@ async function run() {
       });
     });
 
-    
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 });
     console.log(
