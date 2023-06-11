@@ -104,7 +104,7 @@ async function run() {
     });
 
     // get the add classes by instructor
-    app.get('/myClasses',verifyJWT,verifyInstructor, async (req, res) => {
+    app.get('/myClasses', verifyJWT, verifyInstructor, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
@@ -117,6 +117,26 @@ async function run() {
       }
       const query = { instructor_email: email };
       const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get('/myClasses/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.findOne(query);
+      res.send(result);
+    });
+    app.put('/myClasses/:id', async (req, res) => {
+      const newData = req.body;
+      const filter = { _id: new ObjectId(req.params.id) };
+      const updateClass = {
+        $set: {
+          course_name: newData.course_name,
+          image: newData.image,
+          price: newData.price,
+          available_seats: newData.available_seats,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateClass);
       res.send(result);
     })
     app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
