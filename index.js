@@ -103,6 +103,22 @@ async function run() {
       res.send(result);
     });
 
+    // get the add classes by instructor
+    app.get('/myClasses',verifyJWT,verifyInstructor, async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res
+          .status(403)
+          .send({ error: true, message: 'forbidden access' });
+      }
+      const query = { instructor_email: email };
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    })
     app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
       const newItem = req.body;
       const result = await classesCollection.insertOne(newItem);
