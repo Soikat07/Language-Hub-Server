@@ -84,10 +84,28 @@ async function run() {
       }
       next();
     };
+    // verify instructor
+    const verifyInstructor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== 'Instructor') {
+        return res
+          .status(403)
+          .send({ error: true, message: 'forbidden message' });
+      }
+      next();
+    };
 
-    // get all data from classes from database collection
+    // classes collection
     app.get('/classes', async (req, res) => {
       const result = await classesCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
+      const newItem = req.body;
+      const result = await classesCollection.insertOne(newItem);
       res.send(result);
     });
 
@@ -136,7 +154,6 @@ async function run() {
       if (req.decoded.email !== email) {
         res.send({ instructor: false });
       }
-
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { instructor: user?.role === 'Instructor' };
@@ -154,7 +171,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    
+
     app.post('/users', async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
@@ -198,9 +215,10 @@ async function run() {
     });
 
     // create payment intent
-    app.post('/create-payment-intent', async (req, res) => {
+    app.post('/create-payment-intent',verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
+      console.log(price,amount);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: 'usd',
