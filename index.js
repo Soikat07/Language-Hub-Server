@@ -138,7 +138,8 @@ async function run() {
       };
       const result = await classesCollection.updateOne(filter, updateClass);
       res.send(result);
-    })
+    });
+
     app.post('/classes', verifyJWT, verifyInstructor, async (req, res) => {
       const newItem = req.body;
       const result = await classesCollection.insertOne(newItem);
@@ -249,6 +250,41 @@ async function run() {
       const result = await selectClassesCollection.deleteOne(query);
       res.send(result);
     });
+
+    // update status
+    app.put('/manageClasses/approve/:id', async (req, res) => {
+      const filter = { _id: new ObjectId(req.params.id) };
+      const updateStatus = {
+        $set: {
+          status: 'Approved'
+        }
+      };
+      const result = await classesCollection.updateOne(filter, updateStatus);
+      res.send(result);
+    })
+    app.put('/manageClasses/deny/:id', async (req, res) => {
+      const filter = { _id: new ObjectId(req.params.id) };
+      const updateStatus = {
+        $set: {
+          status: 'Denied',
+        }
+      };
+      const result = await classesCollection.updateOne(filter, updateStatus);
+      res.send(result);
+    })
+    // send feedback to the Instructor
+    app.put('/manageClasses/:id', async (req, res) => {
+      const note = req.body;
+      console.log(note);
+      const filter = { _id: new ObjectId(req.params.id) };
+      const updateFeedBack = {
+        $set: {
+          feedback: note
+        }
+      };
+      const result = await classesCollection.updateOne(filter, updateFeedBack);
+      res.send(result);
+    })
 
     // create payment intent
     app.post('/create-payment-intent',verifyJWT, async (req, res) => {
